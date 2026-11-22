@@ -44,7 +44,21 @@ A partir daí:
 - Os votos das enquetes são somados de todos os usuários.
 - Denúncias, pedidos de anunciantes e sugestões de evento chegam no seu painel.
 
-## Passo 3 — Administrar o conteúdo (pelo painel do Supabase)
+## Passo 3 — Área do administrador
+
+O app tem um painel próprio: **admin.html** (link "Área do administrador", no fim da aba Comunidade).
+
+Para criar o seu acesso:
+1. No Supabase, abra **Authentication → Users → Add user → Create new user**, coloque seu e-mail e uma senha e marque **Auto Confirm User**.
+2. Em **SQL Editor**, rode (trocando o e-mail):
+   ```sql
+   insert into admins (user_id, email) select id, email from auth.users where email = 'seu@email.com';
+   ```
+3. Em **Authentication → Sign In / Providers**, desligue **Allow new users to sign up**, para ninguém criar conta sozinho.
+
+No painel você cadastra eventos, anúncios, enquetes (e vê os resultados) e episódios do Oncast com o áudio, oculta músicas de artistas e lê denúncias, pedidos de anúncio e sugestões de evento. Tudo o que salvar aparece no app na hora. Para ter mais administradores, repita os passos 1 e 2 com o e-mail da pessoa.
+
+## Administrar pelo painel do Supabase (alternativa)
 
 Tudo pelo **Table Editor**, como uma planilha:
 

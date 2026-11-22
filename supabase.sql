@@ -121,3 +121,40 @@ create policy "ouvir audios" on storage.objects for select using (bucket_id in (
 -- Conteúdo inicial de exemplo (apague ou edite à vontade)
 insert into enquetes (pergunta, opcoes) values
  ('Que tipo de música você mais ouve?', array['Sertanejo','Rock','Pop','Gospel','Rap']);
+
+-- ============================================================
+-- ADMINISTRADORES
+-- Só quem estiver na tabela "admins" pode editar e publicar.
+-- ============================================================
+create table if not exists admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  email text
+);
+alter table admins enable row level security;
+
+create or replace function is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from admins where user_id = auth.uid());
+$$;
+grant execute on function is_admin() to anon, authenticated;
+
+create policy "admin le admins" on admins for select using (is_admin());
+
+-- Acesso total do administrador a todo o conteúdo
+create policy "admin faixas" on faixas for all using (is_admin()) with check (is_admin());
+create policy "admin denuncias" on denuncias for all using (is_admin()) with check (is_admin());
+create policy "admin episodios" on episodios for all using (is_admin()) with check (is_admin());
+create policy "admin eventos" on eventos for all using (is_admin()) with check (is_admin());
+create policy "admin anuncios" on anuncios for all using (is_admin()) with check (is_admin());
+create policy "admin enquetes" on enquetes for all using (is_admin()) with check (is_admin());
+create policy "admin votos" on enquete_votos for all using (is_admin()) with check (is_admin());
+create policy "admin pedidos" on pedidos_anuncio for all using (is_admin()) with check (is_admin());
+create policy "admin sugestoes" on sugestoes_evento for all using (is_admin()) with check (is_admin());
+
+-- Áudios: o administrador envia episódios do Oncast e pode apagar qualquer áudio
+create policy "admin audios" on storage.objects for all
+  using (bucket_id in ('musicas','oncast') and is_admin())
+  with check (bucket_id in ('musicas','oncast') and is_admin());
+
+-- Para tornar alguém administrador (depois de criar o usuário em Authentication → Users):
+-- insert into admins (user_id, email) select id, email from auth.users where email = 'SEU-EMAIL-AQUI';

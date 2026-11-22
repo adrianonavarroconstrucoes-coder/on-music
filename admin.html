@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>On Music — Administração</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Lexend:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#07090b;--panel:#0d1215;--line:rgba(51,214,239,.35);--c:#33d6ef;--mute:#b9d9e0;--grad:linear-gradient(180deg,#a6f4ff,#33d6ef 50%,#0aa6c4);--red:#ff6b6b}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:radial-gradient(80% 40% at 10% -5%,rgba(51,214,239,.22),transparent 60%),var(--bg);color:#fff;font:15px/1.5 Lexend,system-ui,sans-serif;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+h1,h2,.btn,.tab{font-family:Fredoka,Lexend,sans-serif}
+h1{font-size:28px;margin:0}h1 span{color:var(--c)}
+h2{font-size:22px;margin:0}
+.card{background:linear-gradient(160deg,rgba(51,214,239,.1),var(--panel) 55%);border:3px solid var(--c);box-shadow:0 0 0 4px #000;border-radius:20px;padding:18px}
+.btn{min-height:44px;padding:8px 18px;border-radius:22px;border:3px solid #000;background:var(--grad);color:#000;font-weight:700}
+.btn.g{background:#000;border:2px solid var(--line);color:#fff}
+.btn.r{background:#000;border:2px solid var(--red);color:var(--red)}
+.btn.s{min-height:36px;padding:4px 12px;font-size:14px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:6px 0 14px}
+.tab{flex:none;min-height:42px;padding:6px 16px;border-radius:21px;background:#000;border:2px solid var(--line);font-weight:700}
+.tab.on{background:var(--grad);color:#000;border:3px solid #000}
+.tab b{display:inline-block;min-width:22px;margin-left:6px;padding:0 6px;border-radius:11px;background:var(--red);color:#fff;font-size:12px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.rows{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:#000;border:2px solid var(--line);border-radius:14px;padding:10px 14px}
+.row .t{font-weight:500}.row .m{font-size:13px;color:var(--mute);overflow-wrap:anywhere}
+.row .a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:8px;border:1px solid var(--line);margin-left:6px;color:var(--c)}
+.tag.off{color:var(--red);border-color:var(--red)}
+.empty{padding:20px;text-align:center;color:var(--mute);border:2px dashed var(--line);border-radius:14px}
+form{display:grid;gap:12px}
+label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],select,textarea{width:100%;font-size:16px;min-height:44px;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:#000}
+textarea{min-height:110px;resize:vertical}
+input[type=color]{width:64px;height:44px;border:2px solid var(--line);border-radius:10px;background:#000}
+.chk{display:flex;gap:10px;align-items:center;color:#fff}.chk input{width:22px;height:22px;accent-color:var(--c)}
+.modal{position:fixed;inset:0;background:#000b;display:none;place-items:center;padding:16px;z-index:9}
+.modal.on{display:grid}
+.modal .card{width:min(620px,100%);max-height:90vh;overflow:auto}
+.login{max-width:420px;margin:12vh auto 0}
+.msg{font-size:14px;color:var(--mute)}.err{color:var(--red)}
+.bars{display:grid;gap:4px;margin-top:6px}
+.bars div{display:flex;justify-content:space-between;gap:8px;font-size:13px;background:linear-gradient(90deg,rgba(51,214,239,.35) var(--p),transparent var(--p));border-radius:6px;padding:2px 8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000;border:2px solid var(--c);padding:10px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:10}
+.toast.on{opacity:1}
+@media(max-width:600px){.row{grid-template-columns:1fr}.row .a{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="vLogin" class="login card" hidden>
+    <h1>On <span>Music</span> · Admin</h1>
+    <p class="msg">Área restrita da equipe Garça On.</p>
+    <form id="fLogin">
+      <label>E-mail<input type="email" id="lEmail" required autocomplete="username"></label>
+      <label>Senha<input type="password" id="lPass" required autocomplete="current-password"></label>
+      <button class="btn" type="submit">Entrar</button>
+      <span class="msg err" id="lErr"></span>
+      <button class="btn g s" type="button" id="lReset">Esqueci a senha</button>
+    </form>
+  </section>
+
+  <section id="vSetup" class="login card" hidden>
+    <h1>On <span>Music</span> · Admin</h1>
+    <p class="msg">O banco de dados ainda não está ligado. Preencha o <b>config.js</b> com a URL e a chave do Supabase (veja o LEIA-ME).</p>
+  </section>
+
+  <section id="vApp" hidden>
+    <header>
+      <h1>On <span>Music</span> · Admin</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn g s" href="./" style="text-decoration:none;display:inline-flex;align-items:center">Abrir o app</a><button class="btn g s" id="bOut">Sair</button></div>
+    </header>
+    <p class="msg" id="who"></p>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="card">
+      <div class="bar"><h2 id="tTitle"></h2><button class="btn" id="bNew">Adicionar</button></div>
+      <p class="msg" id="tHelp" style="margin-top:-4px"></p>
+      <div class="rows" id="rows"></div>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="modal"><div class="card"><h2 id="mTitle" style="margin-bottom:12px"></h2><form id="mForm"></form></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tt;const toast=m=>{const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2600)};
+const CFG=window.ON_MUSIC_CONFIG||{};
+if(!CFG.SUPABASE_URL||!CFG.SUPABASE_ANON_KEY||!window.supabase){$('#vSetup').hidden=false;throw new Error('sem config')}
+const sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY);
+const fmtD=d=>d?new Date(d+(d.length===10?'T12:00:00':'')).toLocaleDateString('pt-BR'):'';
+
+/* Cada aba: tabela, campos do formulário e como mostrar cada linha */
+const TABS={
+ eventos:{label:'Agenda',order:['data',true],help:'Eventos que aparecem na aba Agenda. Eventos com data passada somem do app sozinhos.',
+  fields:[['data','Data','date',1],['hora','Horário (ex.: 19h)','text'],['titulo','Título','text',1],['local','Local','text'],['categoria','Categoria','select',0,['Música','Feira','Esporte','Cultura','Religião','Educação','Outros']]],
+  line:r=>[`${fmtD(r.data)} · ${r.titulo}`,[r.hora,r.local,r.categoria].filter(Boolean).join(' · ')]},
+ anuncios:{label:'Anúncios',order:['ordem',true],help:'Promoções da tela inicial e da aba Comunidade. O primeiro da ordem vira o destaque da tela inicial.',
+  fields:[['empresa','Empresa','text',1],['oferta','Oferta','text'],['cupom','Cupom (opcional)','text'],['tipo','Tipo','select',0,['Destaque','Cupom','Patrocínio do podcast','Divulgação de evento']],['cor','Cor do cartão','color'],['ordem','Ordem (menor aparece primeiro)','number'],['ativo','No ar','check']],
+  line:r=>[r.empresa+(r.ativo?'':' <span class="tag off">fora do ar</span>'),[r.tipo,r.oferta,r.cupom&&('cupom '+r.cupom)].filter(Boolean).join(' · ')]},
+ enquetes:{label:'Enquetes',order:['created_at',false],help:'A enquete mais recente que estiver ativa aparece como "Enquete da semana".',
+  fields:[['pergunta','Pergunta','text',1],['opcoes','Opções (uma por linha)','lines',1],['ativa','Ativa','check']],
+  line:r=>[r.pergunta+(r.ativa?'':' <span class="tag off">encerrada</span>'),resultados(r)]},
+ episodios:{label:'Oncast',order:['data',false],help:'Envie o áudio do episódio (MP3). O link do post leva para o Instagram ou Facebook.',
+  fields:[['titulo','Título do episódio','text',1],['plataforma','Plataforma','select',0,['Instagram','Facebook']],['data','Data','date',1],['duracao','Duração (ex.: 24 min)','text'],['audio_url','Áudio do episódio','audio',1],['link','Link do post','text'],['ativo','No ar','check']],
+  line:r=>[r.titulo+(r.ativo?'':' <span class="tag off">fora do ar</span>'),[fmtD(r.data),r.plataforma,r.duracao].filter(Boolean).join(' · ')]},
+ faixas:{label:'Músicas dos artistas',order:['created_at',false],noNew:1,help:'Músicas publicadas pelos artistas. Oculte para tirar do app sem apagar.',
+  line:r=>[`${r.titulo} — ${r.artista}`+(r.status==='publicada'?'':' <span class="tag off">oculta</span>'),[r.genero,r.email,new Date(r.created_at).toLocaleString('pt-BR')].filter(Boolean).join(' · ')],
+  extra:r=>`<a class="btn g s" href="${esc(r.audio_url)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">Ouvir</a><button class="btn g s" data-toggle="${r.id}" data-st="${r.status}">${r.status==='publicada'?'Ocultar':'Publicar'}</button>`},
+ denuncias:{label:'Denúncias',order:['created_at',false],noNew:1,noEdit:1,help:'Denúncias enviadas pelos ouvintes. Veja a faixa e decida se oculta.',
+  line:r=>[r.motivo||'Sem motivo',`Faixa #${r.faixa_id} · ${new Date(r.created_at).toLocaleString('pt-BR')}`],
+  extra:r=>`<button class="btn g s" data-hide="${r.faixa_id}">Ocultar faixa</button>`},
+ pedidos_anuncio:{label:'Pedidos de anúncio',order:['created_at',false],noNew:1,noEdit:1,help:'Empresas que pediram para anunciar pelo app.',
+  line:r=>[r.empresa,[r.responsavel,r.contato,r.tipo,new Date(r.created_at).toLocaleDateString('pt-BR')].filter(Boolean).join(' · ')]},
+ sugestoes_evento:{label:'Sugestões de evento',order:['created_at',false],noNew:1,noEdit:1,help:'Eventos sugeridos pelo público. Cadastre na Agenda os que forem aprovados.',
+  line:r=>[r.titulo||'(sem nome)',[r.data_local,new Date(r.created_at).toLocaleDateString('pt-BR')].filter(Boolean).join(' · ')]},
+};
+let cur='eventos',data=[],votes=[],counts={};
+function resultados(r){
+ const vs=votes.filter(v=>v.enquete_id===r.id),tot=vs.length||1;
+ return `${vs.length} votos<div class="bars">${(r.opcoes||[]).map((o,j)=>{const n=vs.filter(v=>v.opcao===j).length,p=Math.round(n/tot*100);return `<div style="--p:${p}%"><span>${esc(o)}</span><b>${p}%</b></div>`}).join('')}</div>`;
+}
+function tabsHtml(){$('#tabs').innerHTML=Object.entries(TABS).map(([k,t])=>`<button class="tab${k===cur?' on':''}" data-tab="${k}">${t.label}${counts[k]?`<b>${counts[k]}</b>`:''}</button>`).join('')}
+async function load(){
+ const t=TABS[cur];$('#tTitle').textContent=t.label;$('#tHelp').textContent=t.help;$('#bNew').hidden=!!t.noNew;tabsHtml();
+ $('#rows').innerHTML='<div class="empty">Carregando…</div>';
+ const r=await sb.from(cur).select('*').order(t.order[0],{ascending:t.order[1]}).limit(500);
+ if(r.error){$('#rows').innerHTML=`<div class="empty err">Erro: ${esc(r.error.message)}</div>`;return}
+ data=r.data;
+ if(cur==='enquetes'){const v=await sb.from('enquete_votos').select('enquete_id,opcao').limit(100000);votes=v.data||[]}
+ $('#rows').innerHTML=data.length?data.map(row=>{const[a,b]=t.line(row);return `<div class="row"><div><div class="t">${cur==='enquetes'||cur==='faixas'||cur==='anuncios'||cur==='episodios'?a.replace(/^([^<]*)/,m=>esc(m)):esc(a)}</div><div class="m">${cur==='enquetes'?b:esc(b)}</div></div>
+  <div class="a">${t.extra?t.extra(row):''}${t.noEdit?'':`<button class="btn g s" data-edit="${row.id}">Editar</button>`}<button class="btn r s" data-del="${row.id}">Excluir</button></div></div>`}).join(''):'<div class="empty">Nada por aqui ainda.</div>';
+}
+async function badges(){
+ for(const k of ['denuncias','pedidos_anuncio','sugestoes_evento']){const r=await sb.from(k).select('id',{count:'exact',head:true});counts[k]=r.count||0}
+ tabsHtml();
+}
+function openForm(row){
+ const t=TABS[cur];$('#mTitle').textContent=(row?'Editar · ':'Adicionar · ')+t.label;
+ $('#mForm').innerHTML=t.fields.map(([k,l,ty,req,opts])=>{
+  const v=row?row[k]:(ty==='check'?true:ty==='color'?'#33d6ef':ty==='number'?0:ty==='date'?new Date().toISOString().slice(0,10):'');
+  const rq=req?'required':'';
+  if(ty==='select')return `<label>${l}<select name="${k}">${opts.map(o=>`<option${o===v?' selected':''}>${o}</option>`).join('')}</select></label>`;
+  if(ty==='check')return `<label class="chk"><input type="checkbox" name="${k}" ${v?'checked':''}>${l}</label>`;
+  if(ty==='lines')return `<label>${l}<textarea name="${k}" ${rq}>${esc((v||[]).join('\n'))}</textarea></label>`;
+  if(ty==='audio')return `<label>${l}<input type="file" name="${k}__file" accept="audio/*" ${row?'':rq}>${v?`<span>Atual: <a href="${esc(v)}" target="_blank" style="color:var(--c)">ouvir</a> (envie outro só se quiser trocar)</span>`:''}<input type="hidden" name="${k}" value="${esc(v||'')}"></label>`;
+  return `<label>${l}<input type="${ty}" name="${k}" value="${esc(v??'')}" ${rq}></label>`;
+ }).join('')+`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit">Salvar e publicar</button><button class="btn g" type="button" data-close>Cancelar</button></div><span class="msg err" id="mErr"></span>`;
+ $('#mForm').dataset.id=row?row.id:'';$('#modal').classList.add('on');
+}
+$('#mForm').addEventListener('submit',async e=>{
+ e.preventDefault();const t=TABS[cur],f=e.target,btn=f.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Salvando…';$('#mErr').textContent='';
+ try{
+  const rec={};
+  for(const[k,,ty]of t.fields){
+   if(ty==='check')rec[k]=f.elements[k].checked;
+   else if(ty==='lines')rec[k]=f.elements[k].value.split('\n').map(s=>s.trim()).filter(Boolean);
+   else if(ty==='number')rec[k]=Number(f.elements[k].value||0);
+   else if(ty==='audio'){const file=f.elements[k+'__file'].files[0];
+    if(file){const path=Date.now()+'-'+file.name.replace(/[^\w.-]/g,'_');const up=await sb.storage.from('oncast').upload(path,file,{contentType:file.type||'audio/mpeg'});if(up.error)throw up.error;rec[k]=sb.storage.from('oncast').getPublicUrl(path).data.publicUrl}
+    else rec[k]=f.elements[k].value;if(!rec[k])throw new Error('Envie o áudio do episódio')}
+   else rec[k]=f.elements[k].value.trim()||null;
+  }
+  if(cur==='enquetes'&&rec.opcoes.length<2)throw new Error('Coloque pelo menos duas opções');
+  const id=f.dataset.id;const r=id?await sb.from(cur).update(rec).eq('id',id):await sb.from(cur).insert(rec);
+  if(r.error)throw r.error;
+  $('#modal').classList.remove('on');toast('Publicado no app');load();
+ }catch(err){$('#mErr').textContent='Não foi possível salvar: '+(err.message||err)}
+ btn.disabled=false;btn.textContent='Salvar e publicar';
+});
+document.addEventListener('click',async e=>{
+ const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.tab){cur=d.tab;load()}
+ else if(d.close!==undefined)$('#modal').classList.remove('on');
+ else if(d.edit)openForm(data.find(r=>String(r.id)===d.edit));
+ else if(d.del){if(b.dataset.sure!=='1'){b.dataset.sure='1';b.textContent='Confirmar exclusão';setTimeout(()=>{b.dataset.sure='';b.textContent='Excluir'},4000);return}
+  const r=await sb.from(cur).delete().eq('id',d.del);if(r.error)return toast('Erro: '+r.error.message);toast('Excluído');load();badges()}
+ else if(d.toggle){const st=d.st==='publicada'?'oculta':'publicada';const r=await sb.from('faixas').update({status:st}).eq('id',d.toggle);if(r.error)return toast('Erro: '+r.error.message);toast(st==='oculta'?'Faixa ocultada':'Faixa publicada');load()}
+ else if(d.hide){const r=await sb.from('faixas').update({status:'oculta'}).eq('id',d.hide);toast(r.error?'Erro: '+r.error.message:'Faixa ocultada do app')}
+});
+$('#bNew').onclick=()=>openForm(null);
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')$('#modal').classList.remove('on')});
+
+/* Login */
+async function enter(){
+ const{data:{session}}=await sb.auth.getSession();
+ if(!session){$('#vLogin').hidden=false;$('#vApp').hidden=true;return}
+ const ok=await sb.rpc('is_admin');
+ if(ok.error||!ok.data){$('#vLogin').hidden=false;$('#vApp').hidden=true;$('#lErr').textContent='Este usuário não é administrador.';await sb.auth.signOut();return}
+ $('#vLogin').hidden=true;$('#vApp').hidden=false;$('#who').textContent='Conectado como '+session.user.email;load();badges();
+}
+$('#fLogin').addEventListener('submit',async e=>{
+ e.preventDefault();$('#lErr').textContent='';
+ const r=await sb.auth.signInWithPassword({email:$('#lEmail').value.trim(),password:$('#lPass').value});
+ if(r.error){$('#lErr').textContent='E-mail ou senha incorretos.';return}
+ enter();
+});
+$('#lReset').onclick=async()=>{const em=$('#lEmail').value.trim();if(!em)return($('#lErr').textContent='Digite seu e-mail acima.');
+ await sb.auth.resetPasswordForEmail(em,{redirectTo:location.href});$('#lErr').textContent='Se o e-mail for de um administrador, chegará um link para criar nova senha.'};
+$('#bOut').onclick=async()=>{await sb.auth.signOut();location.reload()};
+sb.auth.onAuthStateChange(ev=>{if(ev!=='PASSWORD_RECOVERY')return;
+ $('#mTitle').textContent='Criar nova senha';
+ $('#mForm').innerHTML='<label>Nova senha (mínimo 8 caracteres)<input type="password" name="np" minlength="8" required autocomplete="new-password"></label><button class="btn" type="submit">Salvar senha</button><span class="msg err" id="mErr"></span>';
+ $('#mForm').dataset.mode='senha';$('#modal').classList.add('on');
+});
+$('#mForm').addEventListener('submit',async e=>{if(e.target.dataset.mode!=='senha')return;e.preventDefault();e.stopImmediatePropagation();
+ const r=await sb.auth.updateUser({password:e.target.elements.np.value});
+ if(r.error){$('#mErr').textContent='Não foi possível salvar: '+r.error.message;return}
+ e.target.dataset.mode='';$('#modal').classList.remove('on');toast('Senha alterada');enter();
+},true);
+enter();
+}
+</script>
+</body>
+</html>
