@@ -1,0 +1,13 @@
+# Publicação automática no Netlify: cada atualização no GitHub vai ao ar sozinha.
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"

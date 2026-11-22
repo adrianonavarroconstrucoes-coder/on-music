@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>On Music</title>
+<meta name="theme-color" content="#07090b">
+<meta name="description" content="On Music — músicas, rádios, Oncast, agenda e promoções de Garça.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Lexend:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: o app da casa — direto, local, ligado. Marca Garça On.
+   IDEA: um interruptor "ON": tocar música é ligar o som.
+   PICTURE: o grande botão-interruptor da logo, que desliza para ON ao tocar.
+   COLOUR and TYPE: verde-petróleo #003631, turquesa #00BBB0, branco; Lexend.
+   LAYOUT: coluna de app, player fixo e navegação inferior. */
+:root{color-scheme:dark;--bg:#003631;--panel:#06443e;--line:#0f5850;--teal:#00BBB0;--ink:#fff;--mute:#a7d3ce;--warn:#ffcf5c}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Lexend,system-ui,sans-serif;overflow-x:clip}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.app{max-width:760px;margin:0 auto;padding:0 16px 170px}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 8px}
+header svg{height:44px;width:auto}
+h1{font-size:clamp(30px,6vw,44px);line-height:1.05;margin:4px 0 6px;font-weight:800;text-wrap:balance}
+h2{font-size:22px;margin:28px 0 10px;font-weight:700}
+.mute{color:var(--mute)}.small{font-size:13px;color:var(--mute)}
+.view{display:none}.view.on{display:block}
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;background:var(--panel);border-radius:28px;padding:22px}
+.switch{width:170px;height:84px;border-radius:42px;background:#0c5a52;position:relative;transition:background .3s}
+.switch i{position:absolute;top:8px;left:8px;width:68px;height:68px;border-radius:50%;background:#fff;transition:left .35s cubic-bezier(.5,1.6,.5,1)}
+.switch.play{background:var(--teal)}.switch.play i{left:94px}
+.switch b{position:absolute;right:20px;top:24px;font-weight:800;font-size:26px;color:#7fb5ae}
+.switch.play b{left:22px;right:auto;color:var(--bg)}
+.now{font-weight:700;font-size:19px;line-height:1.25}
+.row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.card{flex:none;width:150px;text-align:left;scroll-snap-align:start}
+.card .cov{width:150px;height:150px;border-radius:20px}
+.card b{display:block;margin-top:8px;font-size:15px;line-height:1.25}
+.cov{display:grid;place-items:center;border-radius:12px;flex:none}
+.cov svg{width:62%}
+.list{display:grid;gap:4px}
+.trk{display:grid;grid-template-columns:52px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:6px;border-radius:14px}
+.trk:hover{background:var(--panel)}.trk.cur{background:var(--panel);box-shadow:inset 3px 0 0 var(--teal)}
+.trk .cov{width:52px;height:52px}
+.trk .t{overflow:hidden}.trk .t b,.trk .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trk .t b{font-weight:500}.trk .t span{font-size:13px;color:var(--mute)}
+.ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--mute)}
+.ib:hover{background:var(--line);color:#fff}.ib.fav{color:var(--teal)}
+.ib svg{width:22px;height:22px}
+.btn{min-height:44px;padding:10px 20px;border-radius:24px;background:var(--teal);color:var(--bg);font-weight:700}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chip{min-height:40px;padding:6px 16px;border-radius:20px;border:2px solid var(--line);color:var(--mute)}
+.chip.on{background:var(--teal);border-color:var(--teal);color:var(--bg);font-weight:700}
+.note{background:var(--panel);border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--mute);margin:12px 0}
+.drop{display:grid;place-items:center;text-align:center;gap:6px;border:2px dashed var(--line);border-radius:20px;padding:28px 16px;cursor:pointer}
+.drop:hover{border-color:var(--teal)}
+form{display:grid;gap:12px;background:var(--panel);border-radius:22px;padding:18px}
+label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
+input[type=text],input[type=email],select{font-size:16px;min-height:46px;padding:8px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg)}
+.chk{display:flex;gap:10px;align-items:flex-start;color:var(--ink)}
+.chk input{width:22px;height:22px;margin-top:2px;accent-color:var(--teal);flex:none}
+.artist{display:flex;align-items:center;gap:12px;margin:18px 0 6px}
+.artist .av{width:46px;height:46px;border-radius:50%;background:var(--teal);color:var(--bg);display:grid;place-items:center;font-weight:800}
+.pl{background:var(--panel);border-radius:16px;padding:6px 12px;margin-bottom:8px}
+.pl summary{min-height:44px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:500}
+.empty{padding:22px;text-align:center;color:var(--mute);border:2px dashed var(--line);border-radius:18px}
+.player{position:fixed;left:0;right:0;bottom:64px;background:#012b27;border-top:1px solid var(--line);z-index:5}
+.pin{max-width:760px;margin:0 auto;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 16px}
+.pin .cov{width:44px;height:44px}
+.pin .t b,.pin .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pin .t span{font-size:13px;color:var(--mute)}
+.ctl{display:flex;align-items:center}
+.pp{width:48px;height:48px;border-radius:50%;background:var(--teal);color:var(--bg);display:grid;place-items:center}
+.pp svg{width:24px;height:24px}
+.bar{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.bar input{flex:1;accent-color:var(--teal)}
+nav{position:fixed;left:0;right:0;bottom:0;height:64px;background:#00231f;display:flex;justify-content:center;z-index:6}
+nav button{flex:1;max-width:150px;display:grid;place-items:center;gap:0;font-size:11px;color:var(--mute);padding-top:6px}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--teal);font-weight:700}
+.modal{position:fixed;inset:0;background:#000a;display:none;place-items:end center;z-index:9}
+.modal.on{display:grid}
+.sheet{background:var(--panel);width:min(560px,100%);border-radius:24px 24px 0 0;padding:20px;display:grid;gap:10px}
+.toast{position:fixed;left:50%;bottom:150px;transform:translate(-50%,20px);background:#fff;color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:500;opacity:0;transition:.3s;z-index:10;width:max-content;max-width:90vw}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.subnav{display:flex;gap:8px;overflow-x:auto;margin:6px 0 4px;padding-bottom:4px}.subnav .chip{flex:none}
+.tile{display:block;width:100%;text-align:left;background:var(--panel);border-radius:22px;padding:16px 18px;margin-top:12px}
+.tile .k{font-size:13px;color:var(--teal);font-weight:700}
+.tile .big{font-size:19px;font-weight:700;line-height:1.25;margin:2px 0}
+.ad{border-radius:22px;padding:18px;color:var(--bg);display:grid;gap:6px}
+.ad .k{font-size:12px;font-weight:700;opacity:.75}
+.ad b{font-size:21px;line-height:1.2}
+.ad .code{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.ad .code span{background:#fff;border-radius:10px;padding:6px 12px;font-weight:800;letter-spacing:1px}
+.ad .code button{min-height:40px;padding:6px 14px;border-radius:20px;background:var(--bg);color:#fff;font-weight:700}
+.ads{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+.poll{background:var(--panel);border-radius:22px;padding:18px;margin-bottom:12px;display:grid;gap:8px}
+.poll .q{font-size:18px;font-weight:700;line-height:1.3}
+.opt{min-height:46px;border-radius:14px;border:2px solid var(--line);text-align:left;padding:8px 14px}
+.opt:hover{border-color:var(--teal)}
+.res{position:relative;border-radius:14px;background:var(--bg);overflow:hidden;min-height:46px;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;gap:10px}
+.res i{position:absolute;inset:0 auto 0 0;background:#0c5a52}.res.mine i{background:var(--teal);opacity:.45}
+.res span{position:relative}.res .pc{font-weight:700;font-variant-numeric:tabular-nums}
+.ev{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.ev .dt{text-align:center;line-height:1}.ev .dt b{display:block;font-size:34px;font-weight:800;color:var(--teal)}.ev .dt span{font-size:13px;color:var(--mute)}
+.ev .info b{display:block;font-weight:700;line-height:1.3}.ev .info span{font-size:14px;color:var(--mute)}
+.ep{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;background:var(--panel);border-radius:18px;padding:10px;margin-bottom:10px}
+.ep .cov{width:72px;height:72px}
+.ep .t b{display:block;line-height:1.3}.ep .t span{font-size:13px;color:var(--mute)}
+.ep .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.ep .acts a,.ep .acts button{min-height:40px;padding:8px 14px;border-radius:20px;border:2px solid var(--line);color:var(--ink);text-decoration:none;font-size:14px}
+.ep .acts .pl1{background:var(--teal);border-color:var(--teal);color:var(--bg);font-weight:700}
+@media(max-width:600px){.hero{grid-template-columns:1fr;justify-items:center;text-align:center}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<style>
+/* Identidade 3D Garça On: turquesa vivo em relevo, faixas de som, brilho. */
+:root{--bg:#012a26;--panel:rgba(255,255,255,.055);--line:rgba(143,243,232,.18);--teal:#2ad4c4;--teal2:#12a596;--hi:#8ff3e8;--mute:#a9ddd7;--gold:#ffd166;
+ --grad:linear-gradient(180deg,#8ff3e8 0%,#2ad4c4 50%,#12a596 100%);--sh3d:inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(0,0,0,.18),0 8px 18px rgba(0,0,0,.35)}
+body{background:radial-gradient(120% 60% at 15% -10%,#0d6a60 0,transparent 55%),radial-gradient(80% 50% at 110% 35%,#085248 0,transparent 60%),radial-gradient(90% 60% at -20% 100%,#06463f 0,transparent 60%),#012a26;background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:overlay;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+body::after{content:"";position:fixed;width:520px;height:520px;right:-220px;top:120px;border-radius:50%;border:46px solid rgba(42,212,196,.06);box-shadow:0 0 0 70px rgba(42,212,196,.03);pointer-events:none;z-index:0}
+.app{position:relative;z-index:1}
+header{justify-content:space-between}
+.logo{height:56px!important;filter:drop-shadow(0 0 18px rgba(42,212,196,.25))}
+h1{background:linear-gradient(180deg,#fff 30%,#b9f6ef);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gh{display:flex;align-items:center;gap:10px}
+.gh::before{content:"";width:34px;height:18px;border-radius:9px;background:var(--grad);box-shadow:var(--sh3d);flex:none;background-image:radial-gradient(circle at 25px 9px,#fff 0 6px,transparent 6.5px),var(--grad)}
+.hero{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(143,243,232,.16),rgba(255,255,255,.03) 60%);border:1px solid var(--line);box-shadow:0 20px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12);padding:26px 22px 40px}
+.hero>*:not(canvas){position:relative;z-index:1}
+#viz{position:absolute;left:0;right:0;bottom:0;width:100%;height:70%;z-index:0;opacity:.9}
+.switch{width:184px;height:90px;border-radius:45px;background:linear-gradient(180deg,#0a4b44,#0e5c54);box-shadow:inset 0 4px 10px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.15),0 0 0 3px rgba(143,243,232,.25)}
+.switch i{width:72px;height:72px;top:9px;left:9px;background:radial-gradient(circle at 35% 30%,#fff,#eef2f1 60%,#c3cecc);box-shadow:0 6px 12px rgba(0,0,0,.45),inset 0 -3px 6px rgba(0,0,0,.12)}
+.switch.play{background:var(--grad);box-shadow:var(--sh3d),0 0 34px rgba(42,212,196,.55),0 0 0 3px #c6faf4}
+.switch.play i{left:103px}
+.switch b{font-size:28px;color:#4f9c93;top:27px}
+.switch.play b{color:#023b35;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.switch:active i{transform:scale(.94)}
+.now{font-size:21px}
+.tile,.poll,form,.pl,.ep,.sheet{background:linear-gradient(160deg,rgba(143,243,232,.11),rgba(255,255,255,.03));border:1px solid var(--line);box-shadow:0 12px 26px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08)}
+.sheet{background:#03403a}
+.tile{position:relative;overflow:hidden;transition:transform .2s}
+.tile::after{content:"";position:absolute;right:-28px;top:-28px;width:96px;height:96px;border-radius:50%;border:14px solid rgba(42,212,196,.13)}
+.tile .k{color:var(--hi)}
+.btn{background:var(--grad);color:#023b35;box-shadow:var(--sh3d);transition:transform .12s}
+.btn:active,.chip:active,.opt:active{transform:translateY(2px) scale(.98)}
+.btn.ghost{background:rgba(255,255,255,.04);box-shadow:none;color:#fff}
+.chip.on{background:var(--grad);box-shadow:var(--sh3d);color:#023b35}
+.chip{background:rgba(255,255,255,.03)}
+.pp{background:var(--grad);box-shadow:var(--sh3d),0 0 18px rgba(42,212,196,.45);color:#023b35}
+.card .cov,.trk .cov,.ep .cov,.pin .cov{box-shadow:inset 0 2px 0 rgba(255,255,255,.4),inset 0 -4px 0 rgba(0,0,0,.18),0 10px 20px rgba(0,0,0,.35)}
+.card{transition:transform .25s}.card:hover{transform:translateY(-4px) rotate(-1deg)}
+.cov svg circle{filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}
+.trk.cur{background:linear-gradient(90deg,rgba(42,212,196,.18),transparent);box-shadow:inset 3px 0 0 var(--teal)}
+.ad{box-shadow:var(--sh3d),0 16px 30px rgba(0,0,0,.3);position:relative;overflow:hidden;transition:transform .2s}
+.ad::after{content:"";position:absolute;right:-40px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.65),rgba(255,255,255,0) 70%)}
+.ad>*{position:relative;z-index:1}
+.ad .code span{box-shadow:inset 0 -2px 0 rgba(0,0,0,.1);border:2px dashed #12a596}
+.res i{background:linear-gradient(90deg,#0c5a52,#13786d)}.res.mine i{background:var(--grad);opacity:.55}
+.ev .dt{background:var(--grad);border-radius:16px;padding:8px 0;box-shadow:var(--sh3d)}.ev .dt b{color:#023b35;font-size:30px}.ev .dt span{color:#035048;font-weight:700}
+.player{background:rgba(1,35,31,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+.player::before{content:"";position:absolute;left:0;top:-1px;height:2px;width:var(--pg,0%);background:var(--grad);box-shadow:0 0 10px var(--teal)}
+nav{background:rgba(0,30,27,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav button.on{color:var(--hi)}nav button.on svg{filter:drop-shadow(0 0 8px rgba(42,212,196,.8))}
+.eq{display:inline-flex!important;gap:2px;align-items:flex-end;height:12px;margin-left:6px;vertical-align:middle}
+.pin .t b{display:block!important}.pin .t .eq{height:8px;margin:2px 0 0}
+.eq i{width:3px;height:30%;background:var(--teal);border-radius:2px}
+body.playing .eq i{animation:eq .9s ease-in-out infinite alternate}
+.eq i:nth-child(2){animation-delay:-.3s!important}.eq i:nth-child(3){animation-delay:-.6s!important}.eq i:nth-child(4){animation-delay:-.15s!important}
+@keyframes eq{from{height:20%}to{height:100%}}
+.rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.45);transform:scale(0);animation:rip .55s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(4);opacity:0}}
+.view.on{animation:in .35s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(10px)}}
+@media(prefers-reduced-motion:reduce){body.playing .eq i,.view.on,.rip{animation:none}}
+</style>
+
+<style>
+/* Oncast: preto, ciano elétrico, branco com contorno, balão de fala e sinal. */
+body.pod{--teal:#33d6ef;--teal2:#0fb3d0;--hi:#8ff0ff;--line:rgba(51,214,239,.28);--mute:#b9d9e0;
+ --grad:linear-gradient(180deg,#a6f4ff 0%,#33d6ef 50%,#0aa6c4 100%);
+ background:radial-gradient(90% 50% at 10% -5%,rgba(51,214,239,.28) 0,transparent 60%),radial-gradient(70% 45% at 110% 40%,rgba(51,214,239,.14) 0,transparent 60%),#07090b;background-attachment:fixed}
+body.pod::after{border-color:rgba(51,214,239,.07);box-shadow:0 0 0 70px rgba(51,214,239,.03)}
+body.pod .logo{filter:drop-shadow(0 0 14px rgba(51,214,239,.3)) hue-rotate(12deg)}
+body.pod nav{background:rgba(5,7,9,.94)}body.pod .player{background:rgba(5,7,9,.85)}
+.oncast{text-align:center;margin:6px 0 10px}
+.oncast svg{width:100%;max-width:560px;overflow:visible;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6)) drop-shadow(0 0 22px rgba(51,214,239,.25))}
+.oncast p{color:var(--mute);max-width:520px;margin:6px auto 12px}
+.oncast .soc{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.oncast .soc a{min-height:44px;display:inline-flex;align-items:center;padding:8px 18px;border-radius:24px;background:#000;border:2px solid #33d6ef;color:#fff;text-decoration:none;font-family:Fredoka,Lexend,sans-serif;font-weight:700;box-shadow:0 0 14px rgba(51,214,239,.3)}
+.oncast .arcs path:nth-child(2n){transition:opacity .3s}
+.oncast.live .arcs path:nth-child(2n){animation:sig 1.4s infinite}
+.oncast.live .arcs path:nth-child(4){animation-delay:.2s}.oncast.live .arcs path:nth-child(6){animation-delay:.4s}
+@keyframes sig{0%,100%{opacity:.25}40%{opacity:1}}
+#v-podcast .chip{font-family:Fredoka,Lexend,sans-serif;font-weight:700;background:#000;border-color:rgba(51,214,239,.4)}
+#v-podcast .chip.on{background:var(--grad);color:#000}
+#v-podcast .ep{background:linear-gradient(160deg,rgba(51,214,239,.12),#0b0e11 55%);border:2px solid rgba(51,214,239,.35);border-radius:22px;box-shadow:0 14px 28px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06)}
+#v-podcast .ep .t b{font-family:Fredoka,Lexend,sans-serif;font-weight:700;font-size:18px}
+#v-podcast .ep .acts a,#v-podcast .ep .acts button{border-color:rgba(51,214,239,.35);background:#000}
+#v-podcast .ep .acts .pl1{background:var(--grad);color:#000;border-color:#000;box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 0 14px rgba(51,214,239,.45);font-family:Fredoka,Lexend,sans-serif}
+.pcov{background:#000!important;border:2px solid #33d6ef}
+.pcov svg{width:78%}
+@media(prefers-reduced-motion:reduce){.oncast.live .arcs path{animation:none}}
+</style>
+
+<style>
+/* Garça On vivo: turquesa mais saturado e bordas marcadas. */
+body:not(.pod){--teal:#19e6d2;--teal2:#00b3a1;--hi:#a8fff5;--line:rgba(25,230,210,.6);--mute:#c8f5ef;
+ --grad:linear-gradient(180deg,#b5fff6 0%,#19e6d2 50%,#00b3a1 100%);
+ background:radial-gradient(120% 60% at 15% -10%,#11917f 0,transparent 55%),radial-gradient(80% 50% at 110% 35%,#0a6e61 0,transparent 60%),radial-gradient(90% 60% at -20% 100%,#08594f 0,transparent 60%),#00302a;background-attachment:fixed}
+body:not(.pod)::after{border-color:rgba(25,230,210,.1)}
+body:not(.pod) .hero{border:2px solid var(--line);box-shadow:0 0 0 4px rgba(25,230,210,.12),0 20px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.2);background:linear-gradient(160deg,rgba(25,230,210,.24),rgba(255,255,255,.04) 60%)}
+body:not(.pod) .tile,body:not(.pod) .poll,body:not(.pod) form,body:not(.pod) .pl,body:not(.pod) .sheet{border:2px solid var(--line);background:linear-gradient(160deg,rgba(25,230,210,.2),rgba(255,255,255,.04));box-shadow:0 12px 26px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.14)}
+body:not(.pod) .tile .k{color:#fff;background:rgba(25,230,210,.25);display:inline-block;padding:2px 10px;border-radius:10px;border:1px solid var(--line)}
+body:not(.pod) .chip{border:2px solid var(--line);color:#fff}
+body:not(.pod) .btn.ghost{border:2px solid var(--line)}
+body:not(.pod) .ad{border:3px solid #fff;box-shadow:0 0 0 3px rgba(25,230,210,.35),0 16px 30px rgba(0,0,0,.35)}
+body:not(.pod) .ad .code span{border-color:#00b3a1}
+body:not(.pod) .cov:not(.pcov){border:2px solid rgba(255,255,255,.75)}
+body:not(.pod) .card .cov{border-width:3px}
+body:not(.pod) .trk{border:2px solid transparent}
+body:not(.pod) .trk:hover,body:not(.pod) .trk.cur{border-color:var(--line)}
+body:not(.pod) .opt{border-color:var(--line);color:#fff}
+body:not(.pod) .res{border:2px solid var(--line)}
+body:not(.pod) .ev{border-bottom:2px solid var(--line)}
+body:not(.pod) .ev .dt{border:2px solid #fff}
+body:not(.pod) .drop{border:3px dashed var(--line)}
+body:not(.pod) input[type=text],body:not(.pod) input[type=email],body:not(.pod) select{border-color:var(--line);background:rgba(0,30,26,.7)}
+body:not(.pod) .switch{box-shadow:inset 0 4px 10px rgba(0,0,0,.45),0 0 0 3px var(--line)}
+body:not(.pod) .switch.play{box-shadow:var(--sh3d),0 0 40px rgba(25,230,210,.7),0 0 0 3px #fff}
+body:not(.pod) .player,body:not(.pod) nav{border-top:2px solid var(--line)}
+body:not(.pod) .gh::before{background-image:radial-gradient(circle at 25px 9px,#fff 0 6px,transparent 6.5px),var(--grad)}
+</style>
+
+<style>
+/* Contorno preto em negrito no Garça On */
+body:not(.pod) .ad{border:3px solid #000;box-shadow:0 0 0 2px rgba(25,230,210,.5),4px 6px 0 #000,0 16px 30px rgba(0,0,0,.35)}
+body:not(.pod) .cov:not(.pcov){border:3px solid #000}
+body:not(.pod) .card .cov{border-width:3px}
+body:not(.pod) .ev .dt{border:3px solid #000;box-shadow:var(--sh3d),3px 4px 0 #000}
+body:not(.pod) .switch.play{box-shadow:var(--sh3d),0 0 40px rgba(25,230,210,.7),0 0 0 4px #000}
+body:not(.pod) .switch i{border:3px solid #000}
+body:not(.pod) .btn:not(.ghost),body:not(.pod) .chip.on,body:not(.pod) .pp{border:3px solid #000}
+body:not(.pod) .gh::before{border:2px solid #000}
+body:not(.pod) .tile .k{border:2px solid #000}
+body:not(.pod) .ad .code span{border:2px solid #000}
+.logo{filter:drop-shadow(0 0 18px rgba(25,230,210,.3))}
+</style>
+
+<style>
+/* Cartões grandes também com contorno preto */
+body:not(.pod) .hero,body:not(.pod) .tile,body:not(.pod) .poll,body:not(.pod) form,body:not(.pod) .pl,body:not(.pod) .sheet{border:3px solid #000;box-shadow:4px 6px 0 #000,0 0 0 2px rgba(25,230,210,.35),inset 0 1px 0 rgba(255,255,255,.16)}
+body:not(.pod) .switch{box-shadow:inset 0 4px 10px rgba(0,0,0,.45),0 0 0 4px #000}
+body:not(.pod) .res,body:not(.pod) .opt{border:2px solid #000}
+body:not(.pod) input[type=text],body:not(.pod) input[type=email],body:not(.pod) select{border:2px solid #000}
+body:not(.pod) .chip{border:2px solid #000;background:rgba(0,0,0,.25)}
+body:not(.pod) .btn.ghost{border:3px solid #000}
+body:not(.pod) .drop{border:3px dashed #000}
+body:not(.pod) .trk:hover,body:not(.pod) .trk.cur{border-color:#000}
+body:not(.pod) .ev{border-bottom:2px solid rgba(0,0,0,.6)}
+body:not(.pod) .player,body:not(.pod) nav{border-top:3px solid #000}
+</style>
+
+<style>
+/* Oncast em todo o app: preto, ciano elétrico, branco com contorno preto, balões e sinal. */
+body.pod{font-family:Lexend,system-ui,sans-serif}
+.pod h1,.pod h2,.pod .now,.pod .tile .big,.pod .poll .q,.pod .card b,.pod .artist b,.pod nav button,.pod .btn,.pod .chip,.pod .k{font-family:Fredoka,Lexend,sans-serif}
+.pod h1{background:none;color:#fff;font-weight:700;-webkit-text-fill-color:#fff;text-shadow:3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,0 0 22px rgba(51,214,239,.45)}
+.pod h2{font-weight:700;font-size:24px}
+.pod .gh::before{background-image:radial-gradient(circle at 25px 9px,#fff 0 6px,transparent 6.5px),var(--grad);border:2px solid #000}
+.pod .logo{height:60px!important;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(51,214,239,.3))}
+body.playing .logo .arcs path:nth-child(2n){animation:sig 1.4s infinite}
+body.playing .logo .arcs path:nth-child(4){animation-delay:.25s}
+.pod .hero,.pod .tile,.pod .poll,.pod form,.pod .pl,.pod .ep,.pod .sheet{background:linear-gradient(160deg,rgba(51,214,239,.14),#0b0e11 58%);border:3px solid #33d6ef;border-radius:24px;box-shadow:0 0 0 4px #000,0 0 26px rgba(51,214,239,.22),0 16px 30px rgba(0,0,0,.55)}
+.pod .sheet{border-radius:24px 24px 0 0}
+.pod .tile::after{border-color:rgba(51,214,239,.16)}
+.pod .tile .k{display:inline-block;background:#000;color:#33d6ef;border:2px solid #33d6ef;padding:2px 12px;border-radius:12px;font-weight:700}
+.pod .tile .big{font-size:20px}
+.pod .switch{background:linear-gradient(180deg,#111518,#1b2227);box-shadow:inset 0 4px 10px rgba(0,0,0,.7),0 0 0 4px #000,0 0 0 6px rgba(51,214,239,.5)}
+.pod .switch.play{background:var(--grad);box-shadow:inset 0 2px 0 rgba(255,255,255,.55),0 0 0 4px #000,0 0 40px rgba(51,214,239,.7)}
+.pod .switch i{border:3px solid #000}
+.pod .switch b{color:#3d6f7a}.pod .switch.play b{color:#000}
+.pod .btn:not(.ghost),.pod .pp{background:var(--grad);color:#000;border:3px solid #000;box-shadow:inset 0 2px 0 rgba(255,255,255,.55),0 0 16px rgba(51,214,239,.45);font-weight:700}
+.pod .btn.ghost{background:#000;border:2px solid #33d6ef;color:#fff}
+.pod .chip{background:#000;border:2px solid rgba(51,214,239,.5);color:#fff;font-weight:700}
+.pod .chip.on{background:var(--grad);border:3px solid #000;color:#000;box-shadow:0 0 14px rgba(51,214,239,.45)}
+.pod .cov:not(.pcov){border:3px solid #000;box-shadow:0 0 0 2px #33d6ef,0 10px 20px rgba(0,0,0,.5)}
+.pod .cov:not(.pcov) svg rect{fill:#000;opacity:.85}
+.pod .ad{border:3px solid #000;box-shadow:0 0 0 3px #33d6ef,0 0 24px rgba(51,214,239,.3),0 16px 30px rgba(0,0,0,.5);color:#000}
+.pod .ad[style*="#ffffff"]{box-shadow:0 0 0 3px #33d6ef,0 16px 30px rgba(0,0,0,.5)}
+.pod .ad .code span{border:2px solid #000}
+.pod .ad .code button{background:#000;color:#33d6ef;border:2px solid #000}
+.pod .opt{background:#000;border:2px solid rgba(51,214,239,.5);color:#fff}
+.pod .opt:hover{border-color:#33d6ef}
+.pod .res{background:#000;border:2px solid rgba(51,214,239,.45)}
+.pod .res i{background:linear-gradient(90deg,#0b3f49,#11586a)}.pod .res.mine i{background:var(--grad);opacity:.55}
+.pod .ev{border-bottom:2px solid rgba(51,214,239,.25)}
+.pod .ev .dt{background:var(--grad);border:3px solid #000;box-shadow:0 0 14px rgba(51,214,239,.4)}
+.pod .ev .dt b{color:#000}.pod .ev .dt span{color:#06333c}
+.pod input[type=text],.pod input[type=email],.pod select{background:#000;border:2px solid rgba(51,214,239,.5)}
+.pod .drop{border:3px dashed #33d6ef;background:rgba(0,0,0,.4)}
+.pod .trk{border:2px solid transparent}
+.pod .trk:hover,.pod .trk.cur{background:linear-gradient(90deg,rgba(51,214,239,.18),transparent);border-color:rgba(51,214,239,.45);box-shadow:none}
+.pod .artist .av{background:var(--grad);color:#000;border:3px solid #000;box-shadow:0 0 0 2px #33d6ef}
+.pod .player,.pod nav{border-top:3px solid #33d6ef;box-shadow:0 -3px 0 #000}
+.pod .player::before{background:var(--grad)}
+.pod .note{background:#000;border-left-color:#33d6ef}
+.pod .ep .acts a,.pod .ep .acts button{background:#000;border-color:rgba(51,214,239,.45)}
+.pod .ep .acts .pl1{background:var(--grad);color:#000;border:2px solid #000}
+.pod .toast{background:#000;color:#fff;border:2px solid #33d6ef;box-shadow:0 0 18px rgba(51,214,239,.45)}
+</style>
+</head>
+<body class="pod">
+<div class="app">
+<header>
+  <svg viewBox="0 0 330 140" role="img" aria-label="On Music" class="logo">
+    <g fill="none" stroke-linecap="round" class="arcs">
+     <path d="M66 26a26 26 0 0 1 26 26" stroke="#000" stroke-width="14"/><path d="M66 26a26 26 0 0 1 26 26" stroke="#33d6ef" stroke-width="7"/>
+     <path d="M66 6a46 46 0 0 1 46 46" stroke="#000" stroke-width="14"/><path d="M66 6a46 46 0 0 1 46 46" stroke="#33d6ef" stroke-width="7"/>
+    </g>
+    <path d="M24 46h282a16 16 0 0 1 16 16v54a16 16 0 0 1-16 16H74l-30 16 5-16H24a16 16 0 0 1-16-16V62a16 16 0 0 1 16-16z" fill="#0a0c0e" stroke="#000" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M24 46h282a16 16 0 0 1 16 16v54a16 16 0 0 1-16 16H74l-30 16 5-16H24a16 16 0 0 1-16-16V62a16 16 0 0 1 16-16z" fill="#0a0c0e" stroke="#33d6ef" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="54" cy="89" r="24" fill="none" stroke="#000" stroke-width="22"/><circle cx="54" cy="89" r="24" fill="none" stroke="#fff" stroke-width="14"/>
+    <path d="M47 78v22l18-11z" fill="#33d6ef" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+    <g font-family="Fredoka,Lexend,sans-serif" font-weight="700" font-size="64" paint-order="stroke" stroke="#000" stroke-width="9" stroke-linejoin="round">
+     <text x="84" y="112" fill="#fff" textLength="44" lengthAdjust="spacingAndGlyphs">N</text>
+     <text x="138" y="112" fill="#33d6ef" textLength="168" lengthAdjust="spacingAndGlyphs">MUSIC</text>
+    </g>
+   </svg>
+</header>
+
+<section class="view on" id="v-inicio">
+  <div class="hero"><canvas id="viz" aria-hidden="true"></canvas>
+    <button class="switch" id="bigSwitch" aria-label="Tocar ou pausar"><b>ON</b><i></i></button>
+    <div><div class="small" id="heroLbl">Toque no botão para ligar o som</div><div class="now" id="heroNow">Manhã no Lago</div><div class="mute" id="heroArt">Catálogo livre</div></div>
+  </div>
+  <div id="homeAd" style="margin-top:14px"></div>
+  <button class="tile" data-v="podcast" id="homeEp"></button>
+  <button class="tile" data-v="agenda" id="homeEv"></button>
+  <button class="tile" data-v="comunidade" id="homePoll"></button>
+  <h2 class="gh">Catálogo livre</h2>
+  <div class="row" id="homeLivre"></div>
+  <h2 class="gh">Artistas da região</h2>
+  <div class="row" id="homeArt"></div>
+  <p class="small" id="homeNote">Faixas de demonstração geradas pelo próprio app.</p>
+</section>
+
+<section class="view" id="v-minhas">
+  <div class="subnav"></div>
+  <h1>Minhas músicas</h1>
+  <p class="mute">Toque músicas que já estão no seu celular ou computador.</p>
+  <label class="drop" for="localIn"><b>Escolher arquivos de música</b><span class="small">MP3, M4A, WAV, OGG — os arquivos não saem do seu aparelho</span></label>
+  <input type="file" id="localIn" accept="audio/*" multiple hidden>
+  <div class="list" id="localList" style="margin-top:14px"></div>
+</section>
+
+<section class="view" id="v-radios">
+  <div class="subnav"></div>
+  <h1>Rádios</h1>
+  <input type="text" id="radioQ" placeholder="Buscar rádio, cidade ou gênero" style="width:100%">
+  <div class="chips" id="radioChips"></div>
+  <div class="small" id="radioInfo" style="margin:6px 0 10px">Rádios brasileiras ao vivo, pela Radio Browser.</div>
+  <div class="list" id="radioList"></div>
+</section>
+
+<section class="view" id="v-artistas">
+  <div class="subnav"></div>
+  <h1>Artistas locais</h1>
+  <p class="mute">Músicos da região publicam as próprias faixas e respondem por elas.</p>
+  <button class="btn" id="openUp">Sou artista: publicar música</button>
+  <form id="upForm" hidden>
+    <label>Nome artístico<input type="text" id="fArt" required></label>
+    <label>E-mail<input type="email" id="fMail" required></label>
+    <label>Título da música<input type="text" id="fTit" required></label>
+    <label>Gênero<select id="fGen"><option>Sertanejo</option><option>Rock</option><option>Pop</option><option>Rap</option><option>MPB</option><option>Gospel</option><option>Eletrônica</option><option>Outro</option></select></label>
+    <label>Arquivo de áudio<input type="file" id="fFile" accept="audio/*" required></label>
+    <label class="chk"><input type="checkbox" id="fDecl" required><span>Declaro que sou titular dos direitos desta obra ou tenho autorização para publicá-la, e assumo total responsabilidade pelo conteúdo enviado.</span></label>
+    <label class="chk"><input type="checkbox" id="fTerm" required><span>Li e aceito os <a href="termos.html" target="_blank" style="color:var(--teal)">Termos de Uso e a Política de Privacidade</a> do On Music.</span></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit">Publicar</button><button class="btn ghost" type="button" id="cancelUp">Cancelar</button></div>
+    <span class="small" id="upNote">Arquivo de até 15 MB. Sua faixa fica pública para todos os ouvintes do On Music.</span>
+  </form>
+  <div id="artList"></div>
+</section>
+
+<section class="view" id="v-biblio">
+  <div class="subnav"></div>
+  <h1>Biblioteca</h1>
+  <h2>Favoritas</h2>
+  <div class="list" id="favList"></div>
+  <h2>Playlists</h2>
+  <div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" id="plName" placeholder="Nome da nova playlist" style="flex:1"><button class="btn" id="plAdd">Criar</button></div>
+  <div id="plList"></div>
+</section>
+
+<section class="view" id="v-podcast">
+  <div class="oncast" id="oncastLogo">
+   <svg viewBox="0 0 600 270" role="img" aria-label="Oncast — Conectando ideias, inspirando pessoas!">
+    <g class="arcs" fill="none" stroke-linecap="round">
+     <path d="M118 52a40 40 0 0 1 40 40" stroke="#000" stroke-width="22"/><path d="M118 52a40 40 0 0 1 40 40" stroke="#33d6ef" stroke-width="11"/>
+     <path d="M118 22a70 70 0 0 1 70 70" stroke="#000" stroke-width="22"/><path d="M118 22a70 70 0 0 1 70 70" stroke="#33d6ef" stroke-width="11"/>
+     <path d="M118 -8a100 100 0 0 1 100 100" stroke="#000" stroke-width="22"/><path d="M118 -8a100 100 0 0 1 100 100" stroke="#33d6ef" stroke-width="11"/>
+    </g>
+    <path d="M40 92h500a26 26 0 0 1 26 26v98a26 26 0 0 1-26 26H120l-50 26 8-26H40a26 26 0 0 1-26-26v-98a26 26 0 0 1 26-26z" fill="#0a0c0e" stroke="#000" stroke-width="18" stroke-linejoin="round"/>
+    <path d="M40 92h500a26 26 0 0 1 26 26v98a26 26 0 0 1-26 26H120l-50 26 8-26H40a26 26 0 0 1-26-26v-98a26 26 0 0 1 26-26z" fill="#0a0c0e" stroke="#33d6ef" stroke-width="6" stroke-linejoin="round"/>
+    <circle cx="92" cy="148" r="42" fill="none" stroke="#000" stroke-width="36"/><circle cx="92" cy="148" r="42" fill="none" stroke="#fff" stroke-width="24"/>
+    <path d="M80 128v40l32-20z" fill="#33d6ef" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+    <g font-family="Fredoka,Lexend,sans-serif" font-weight="700" font-size="104" paint-order="stroke" stroke="#000" stroke-width="12" stroke-linejoin="round">
+     <text x="144" y="186" fill="#fff" textLength="72" lengthAdjust="spacingAndGlyphs">N</text>
+     <text x="222" y="186" fill="#33d6ef" textLength="232" lengthAdjust="spacingAndGlyphs">CAST</text>
+    </g>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+     <g stroke="#000" stroke-width="18"><rect x="482" y="88" width="46" height="84" rx="23"/><path d="M466 146a39 39 0 0 0 78 0"/></g>
+     <g stroke="#fff" stroke-width="9"><rect x="482" y="88" width="46" height="84" rx="23" fill="#0a0c0e"/><path d="M466 146a39 39 0 0 0 78 0"/><path d="M494 112h22M494 128h22M494 144h22"/></g>
+    </g>
+    <text x="300" y="228" text-anchor="middle" font-family="Fredoka,Lexend,sans-serif" font-weight="700" font-size="25" fill="#fff" paint-order="stroke" stroke="#000" stroke-width="6" textLength="420" lengthAdjust="spacingAndGlyphs" transform="skewX(-10) translate(40 0)">Conectando ideias, inspirando pessoas!</text>
+   </svg>
+   <p>O podcast do Garça On. Episódios do Instagram e do Facebook para ouvir aqui, mesmo com a tela desligada.</p>
+   <div class="soc"><a href="https://www.instagram.com/garca_on/" target="_blank" rel="noopener">Instagram @garca_on</a><a href="https://www.facebook.com/share/1K4dpk6V27/" target="_blank" rel="noopener">Facebook Garça On</a></div>
+  </div>
+  <div class="chips" id="podChips"></div>
+  <div id="podList"></div>
+  <p class="small pnote" id="podNote">Episódios de exemplo.</p>
+</section>
+
+<section class="view" id="v-agenda">
+  <h1>Agenda de Garça</h1>
+  <div class="chips" id="evChips"></div>
+  <div id="evList"></div>
+  <p class="small" id="evNote">Eventos de exemplo.</p>
+  <button class="btn ghost" id="evSug" style="margin-top:14px">Sugerir um evento</button>
+</section>
+
+<section class="view" id="v-comunidade">
+  <h1>Comunidade</h1>
+  <div class="subnav" id="comNav"></div>
+  <div id="c-enquetes"><h2>Enquetes</h2><div id="pollList"></div></div>
+  <div id="c-promo"><h2>Promoções e anunciantes</h2><div class="ads" id="adList"></div><p class="small" id="adNote">Anunciantes e cupons de exemplo.</p>
+    <h2>Anuncie no On Music</h2>
+    <form id="adForm">
+      <label>Nome da empresa<input type="text" id="aEmp" required></label>
+      <label>Responsável<input type="text" id="aResp" required></label>
+      <label>WhatsApp ou e-mail<input type="text" id="aCont" required></label>
+      <label>Tipo de anúncio<select id="aTipo"><option>Destaque na tela inicial</option><option>Cupom de promoção</option><option>Patrocínio do podcast</option><option>Divulgação de evento</option></select></label>
+      <button class="btn" type="submit">Quero anunciar</button>
+    </form>
+  </div>
+</section>
+</div>
+
+<div class="player" id="player" hidden>
+  <div class="pin">
+    <div class="cov" id="pCov"></div>
+    <div class="t"><b id="pTit"></b><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="pArt"></span></div>
+    <div class="ctl">
+      <button class="ib" id="pPrev" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+      <button class="pp" id="pPlay" aria-label="Tocar"></button>
+      <button class="ib" id="pNext" aria-label="Próxima"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6zm10-12h2v12h-2z"/></svg></button>
+    </div>
+    <div class="bar"><span id="pCur">0:00</span><input type="range" id="pSeek" min="0" max="100" value="0" step="0.1" aria-label="Posição"><span id="pDur">0:00</span></div>
+  </div>
+</div>
+
+<nav id="nav">
+  <button data-v="inicio" class="on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10v11h6v-6h6v6h6V10z"/></svg>Início</button>
+  <button data-v="minhas" data-grp="musica"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v11.6A3.5 3.5 0 1 0 11 18V8h7V3z"/></svg>Música</button>
+  <button data-v="podcast"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v4a4 4 0 0 0 4 4zm7-4h-2a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-4.1a7 7 0 0 0 6-6.9z"/></svg>Oncast</button>
+  <button data-v="agenda"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2zm-2 8v10h14V10z"/></svg>Agenda</button>
+  <button data-v="comunidade"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 13h3v7H4zm6.5-9h3v16h-3zM17 9h3v11h-3z"/></svg>Comunidade</button>
+</nav>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const CFG=window.ON_MUSIC_CONFIG||{};
+let sb=null;try{if(CFG.SUPABASE_URL&&CFG.SUPABASE_ANON_KEY&&window.supabase)sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY)}catch(e){sb=null}
+const IG='https://www.instagram.com/garca_on/',FB='https://www.facebook.com/share/1K4dpk6V27/';
+const ICON={
+ play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+ pause:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
+ heart:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-1.5-1.3C5 15 2 12.2 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.7-3 6.5-8.5 11.2z"/></svg>',
+ heartO:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20l-1.2-1.1C5.6 14.4 3 12 3 8.5 3 6 5 4 7.5 4c1.6 0 3.2.8 4.5 2.3C13.3 4.8 14.9 4 16.5 4 19 4 21 6 21 8.5c0 3.5-2.6 5.9-7.8 10.4z"/></svg>',
+ more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>'
+};
+const HUES=['#33d6ef','#0fb3d0','#7deaff','#00a3c4','#4fe3ff','#1ec8e6','#a6f4ff','#0a8fb0'];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const podCover=h=>`<div class="cov pcov"><svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="17" fill="none" stroke="#fff" stroke-width="7"/><path d="M26 22v16l12-8z" fill="#33d6ef"/><path d="M44 8a16 16 0 0 1 8 8M44 1a23 23 0 0 1 15 15" fill="none" stroke="#33d6ef" stroke-width="3.5" stroke-linecap="round"/></svg></div>`;
+const coverFor=t=>t.kind==='pod'?podCover(t.h):cover(t.h);
+const cover=h=>`<div class="cov" style="background:${HUES[h%HUES.length]}"><svg viewBox="0 0 100 50"><rect width="100" height="50" rx="25" fill="#003631" opacity=".35"/><circle cx="${h%2?72:28}" cy="25" r="18" fill="#fff"/></svg></div>`;
+
+/* ---- dados de exemplo ---- */
+const T=[];let uid=0;
+const add=(o)=>{o.id=o.id||('t'+(uid++));o.h=o.h??uid;T.push(o);return o};
+[['Manhã no Lago','Coletivo Ventania'],['Ipê Amarelo','Duo Serra Azul'],['Neblina na Avenida','Lua Calma'],['Feira de Domingo','Coletivo Ventania'],['Trem das Seis','Banda Horizonte'],['Céu de Julho','Lua Calma']]
+ .forEach(([t,a],i)=>add({title:t,artist:a,kind:'livre',syn:i+3}));
+[['Rafa Lins','Estrada de Terra','Sertanejo'],['Rafa Lins','Café na Varanda','Sertanejo'],['Banda Garoa','Ruas Molhadas','Rock'],['MC Brisa','Quebrada Ligada','Rap']]
+ .forEach(([a,t,g],i)=>add({title:t,artist:a,genre:g,kind:'artista',syn:i+20}));
+let RADIOS=[],radioState='idle';const RADIO_GENRES=['Todas','Sertanejo','Gospel','Pop','Rock','MPB','Notícias','Eletrônica','Pagode'];
+const RADIOS_OLD=[['Estação Sertaneja','Sertanejo','São Paulo'],['Rock Paulista','Rock','São Paulo'],['Notícia 24h','Notícias','Brasília'],['Gospel Hits','Gospel','Rio de Janeiro'],['Clube MPB','MPB','Belo Horizonte'],['Pop Brasil','Pop','Curitiba'],['Eletrônica Noite','Eletrônica','Florianópolis'],['Raiz Caipira','Sertanejo','Marília']];
+
+[['Ep. 12 — Bastidores da festa de fim de ano','Instagram','18 nov','24 min'],['Ep. 11 — Conversa com artistas locais','Facebook','11 nov','31 min'],['Ep. 10 — O que muda no centro da cidade','Instagram','4 nov','19 min'],['Ep. 9 — Esporte amador em Garça','Facebook','28 out','27 min']]
+ .forEach(([t,p,d,m],i)=>add({title:t,artist:'Oncast · Garça On',kind:'pod',plat:p,date:d,len:m,syn:40+i}));
+let EVENTS=[
+ {d:5,m:'dez',h:'19h',t:'Show de artistas locais',p:'Praça central',c:'Música'},
+ {d:7,m:'dez',h:'8h',t:'Feira de artesanato e comida',p:'Calçadão',c:'Feira'},
+ {d:13,m:'dez',h:'7h',t:'Corrida de rua de fim de ano',p:'Saída do lago',c:'Esporte'},
+ {d:14,m:'dez',h:'20h',t:'Acendimento da decoração de Natal',p:'Lago municipal',c:'Cultura'},
+ {d:20,m:'dez',h:'18h',t:'Cantata de Natal',p:'Igreja matriz',c:'Música'},
+ {d:10,m:'jan',h:'21h',t:'Noite do rock independente',p:'Espaço cultural',c:'Música'}];
+let ADS=[
+ {k:'Destaque',t:'Pizzaria Forno Bom',o:'Pizza grande + refri com 20% de desconto às quartas',c:'ONMUSIC20',bg:'#33d6ef'},
+ {k:'Cupom',t:'Ótica Visão Clara',o:'Armação grátis na compra das lentes',c:'GARCAON',bg:'#a6f4ff'},
+ {k:'Patrocínio do podcast',t:'Academia Movimento',o:'Primeira semana de treino sem custo',c:'ONTREINO',bg:'#ffffff'}];
+let POLLS=[
+ {q:'Qual evento você mais quer ver em dezembro?',o:['Show de artistas locais','Feira de artesanato','Corrida de rua','Cantata de Natal'],v:[42,25,18,31]},
+ {q:'Qual tema o próximo episódio do podcast deve abordar?',o:['Trânsito no centro','Cultura e eventos','Esporte amador','Comércio local'],v:[19,37,14,22]},
+ {q:'Que tipo de música você mais ouve?',o:['Sertanejo','Rock','Pop','Gospel','Rap'],v:[58,21,26,17,12]}];
+let myVotes={},rem=new Set(),evCat='Todos',podPlat='Todos';
+try{myVotes=JSON.parse(localStorage.getItem('onm-votes')||'{}');rem=new Set(JSON.parse(localStorage.getItem('onm-rem')||'[]'))}catch(e){}
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let favs=new Set(),pls=[{name:'Para a estrada',ids:[T[4].id,T[6].id]}];
+try{favs=new Set(JSON.parse(localStorage.getItem('onm-favs')||'[]'))}catch(e){}
+const saveFav=()=>{try{localStorage.setItem('onm-favs',JSON.stringify([...favs]))}catch(e){}};
+
+/* ---- som gerado (WAV) ---- */
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const cache={};
+function wav(seed){
+ const sr=22050,dur=30,n=sr*dur,r=rng(seed*7919);
+ const bpm=78+Math.floor(r()*50),sd=60/bpm/2,steps=Math.ceil(dur/sd)+1;
+ const sc=[[0,2,4,7,9],[0,3,5,7,10],[0,2,4,5,7,9,11]][seed%3];
+ const root=196*2**(Math.floor(r()*6)/12);
+ const mel=[];for(let s=0;s<steps;s++)mel.push(r()<.72?root*2**((sc[Math.floor(r()*sc.length)]+12*Math.floor(r()*2))/12):0);
+ const prog=[0,5,7,3,0,9,5,7].map(d=>root/2*2**(d/12));
+ const buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);
+ const w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))};
+ w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
+ dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
+ const tri=x=>2*Math.abs(2*(x-Math.floor(x+.5)))-1,P=2*Math.PI;
+ for(let i=0;i<n;i++){
+  const t=i/sr,s=Math.floor(t/sd),tt=t-s*sd;let v=0;
+  if(mel[s])v+=.22*tri(mel[s]*t)*Math.exp(-tt*5);
+  v+=.16*Math.sin(P*prog[Math.floor(s/8)%8]*t)*(.6+.4*Math.exp(-tt*3));
+  if(s%4===0)v+=.5*Math.sin(P*(45*tt+60*(1-Math.exp(-tt*25))/25*25))*Math.exp(-tt*14);
+  if(s%2===1)v+=.04*(Math.random()*2-1)*Math.exp(-tt*45);
+  const f=Math.min(1,t/1.5,(dur-t)/2.5);
+  dv.setInt16(44+i*2,Math.max(-1,Math.min(1,v*f))*30000,true);
+ }
+ return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}));
+}
+const srcOf=t=>t.src||(cache[t.syn]||(cache[t.syn]=wav(t.syn)));
+
+/* ---- player ---- */
+const au1=new Audio(),au2=new Audio();au2.preload='none';let au=au1;let queue=[],qi=-1;
+const on=(ev,fn)=>{au1.addEventListener(ev,fn);au2.addEventListener(ev,fn)};
+const remote=t=>t.kind==='radio'||/^https?:/.test(t.src||'');
+const byId=id=>T.find(t=>t.id===id);
+function playList(ids,i){queue=ids;qi=i;load()}
+function load(){
+ const t=byId(queue[qi]);if(!t)return;
+ const nx=remote(t)?au2:au1;if(nx!==au){au.pause()}au=nx;
+ au.src=srcOf(t);au.play().catch(()=>toast(t.kind==='radio'?'Esta rádio não respondeu. Tente outra':'Toque no play para começar'));
+ $('#player').hidden=false;$('#pCov').outerHTML=coverFor(t).replace('class="cov"','class="cov" id="pCov"');
+ $('#pTit').textContent=t.title;$('#pArt').textContent=t.artist;
+ $('#heroNow').textContent=t.title;$('#heroArt').textContent=t.artist;
+ try{navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist,album:'On Music'})}catch(e){}
+ renderAll();
+}
+function toggle(){
+ if(qi<0){playList(T.filter(t=>t.kind==='livre').map(t=>t.id),0);return}
+ au.paused?au.play().catch(()=>{}):au.pause();
+}
+const step=d=>{if(!queue.length)return;qi=(qi+d+queue.length)%queue.length;load()};
+const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
+const sync=()=>{const p=!au.paused;$('#pPlay').innerHTML=p?ICON.pause:ICON.play;$('#bigSwitch').classList.toggle('play',p);$('#heroLbl').textContent=p?'Tocando agora':'Toque no botão para ligar o som'};
+on('play',sync);on('pause',sync);on('ended',()=>step(1));
+on('timeupdate',()=>{$('#pCur').textContent=fmt(au.currentTime);$('#pDur').textContent=fmt(au.duration);if(au.duration)$('#pSeek').value=au.currentTime/au.duration*100});
+$('#pSeek').addEventListener('input',e=>{if(au.duration)au.currentTime=e.target.value/100*au.duration});
+$('#pPlay').onclick=toggle;$('#bigSwitch').onclick=toggle;$('#pPrev').onclick=()=>step(-1);$('#pNext').onclick=()=>step(1);
+try{navigator.mediaSession.setActionHandler('nexttrack',()=>step(1));navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1))}catch(e){}
+
+/* ---- render ---- */
+const row=(t,ids)=>`<div class="trk${queue[qi]===t.id?' cur':''}"><button data-play="${t.id}" data-q="${ids.join(',')}" aria-label="Tocar ${esc(t.title)}">${coverFor(t)}</button>
+<button class="t" data-play="${t.id}" data-q="${ids.join(',')}" style="text-align:left"><b>${esc(t.title)}</b><span>${esc(t.artist)}${t.genre?' · '+esc(t.genre):''}</span></button>
+<button class="ib${favs.has(t.id)?' fav':''}" data-fav="${t.id}" aria-label="Favoritar">${favs.has(t.id)?ICON.heart:ICON.heartO}</button>
+<button class="ib" data-more="${t.id}" aria-label="Mais opções">${ICON.more}</button></div>`;
+const list=(arr,empty)=>{const ids=arr.map(t=>t.id);return arr.length?arr.map(t=>row(t,ids)).join(''):`<div class="empty">${empty}</div>`};
+const card=(t,ids)=>`<button class="card" data-play="${t.id}" data-q="${ids.join(',')}">${cover(t.h).replace('class="cov"','class="cov" style="width:150px;height:150px;border-radius:20px;background:'+HUES[t.h%HUES.length]+'"')}<b>${esc(t.title)}</b><span class="small">${esc(t.artist)}</span></button>`;
+let rGen='Todas';
+function renderAll(){
+ const liv=T.filter(t=>t.kind==='livre'),art=T.filter(t=>t.kind==='artista');
+ $('#homeLivre').innerHTML=liv.map(t=>card(t,liv.map(x=>x.id))).join('');
+ $('#homeArt').innerHTML=art.map(t=>card(t,art.map(x=>x.id))).join('');
+ $('#localList').innerHTML=list(T.filter(t=>t.kind==='local'),'Nenhuma música escolhida ainda.');
+ const groups={};art.forEach(t=>(groups[t.artist]=groups[t.artist]||[]).push(t));
+ $('#artList').innerHTML=Object.entries(groups).map(([a,ts])=>`<div class="artist"><div class="av">${esc(a[0])}</div><div><b>${esc(a)}</b><div class="small">${ts.length} faixa${ts.length>1?'s':''} · ${esc(ts[0].genre||'')}</div></div></div><div class="list">${list(ts)}</div>`).join('');
+ $('#favList').innerHTML=list(T.filter(t=>favs.has(t.id)),'Toque no coração de uma música para salvá-la aqui.');
+ $('#plList').innerHTML=pls.length?pls.map((p,i)=>`<details class="pl" ${p.open?'open':''} data-pl="${i}"><summary>${esc(p.name)} <span class="small">${p.ids.length} música${p.ids.length===1?'':'s'}</span></summary><div class="list">${list(p.ids.map(byId).filter(Boolean),'Playlist vazia. Use ⋮ em uma música para adicionar.')}</div></details>`).join(''):'<div class="empty">Nenhuma playlist ainda.</div>';
+ $('#radioChips').innerHTML=RADIO_GENRES.map(g=>`<button class="chip${g===rGen?' on':''}" data-gen="${g}">${g}</button>`).join('');
+ const rts=RADIOS.map(byId).filter(Boolean),rids=rts.map(t=>t.id);
+ $('#radioList').innerHTML=radioState==='loading'?'<div class="empty">Carregando rádios…</div>':radioState==='error'?'<div class="empty">Não foi possível carregar as rádios. Verifique a internet e tente de novo.</div>':
+  rts.length?rts.map(t=>row(t,rids)).join(''):'<div class="empty">Nenhuma rádio encontrada.</div>';
+ renderMore();
+}
+function renderMore(){
+ const eps=T.filter(t=>t.kind==='pod'),epIds=eps.map(t=>t.id);
+ $('#podChips').innerHTML=['Todos','Instagram','Facebook'].map(g=>`<button class="chip${g===podPlat?' on':''}" data-plat="${g}">${g}</button>`).join('');
+ $('#podList').innerHTML=eps.filter(t=>podPlat==='Todos'||t.plat===podPlat).map(t=>`<div class="ep">${podCover(t.h)}<div class="t"><b>${esc(t.title)}</b><span>${t.plat} · ${t.date} · ${t.len}</span></div>
+  <div class="acts"><button class="pl1" data-play="${t.id}" data-q="${epIds.join(',')}">${queue[qi]===t.id&&!au.paused?'Tocando':'Ouvir'}</button>
+  <a href="${esc(t.link||(t.plat==='Instagram'?IG:FB))}" target="_blank" rel="noopener">Ver no ${t.plat}</a>
+  <button data-fav="${t.id}">${favs.has(t.id)?'Salvo':'Salvar'}</button></div></div>`).join('');
+ const cats=['Todos',...new Set(EVENTS.map(e=>e.c))];
+ $('#evChips').innerHTML=cats.map(c=>`<button class="chip${c===evCat?' on':''}" data-cat="${c}">${c}</button>`).join('');
+ $('#evList').innerHTML=EVENTS.map((e,i)=>({e,i})).filter(({e})=>evCat==='Todos'||e.c===evCat).map(({e,i})=>`<div class="ev"><div class="dt"><b>${e.d}</b><span>${e.m}</span></div><div class="info"><b>${esc(e.t)}</b><span>${e.h} · ${esc(e.p)} · ${e.c}</span></div>
+  <button class="ib${rem.has(i)?' fav':''}" data-rem="${i}" aria-label="Lembrar"><svg viewBox="0 0 24 24" fill="${rem.has(i)?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2h16zM10 21h4"/></svg></button></div>`).join('');
+ const adHtml=a=>`<div class="ad" style="background:${a.bg}"><span class="k">${a.k}</span><b>${esc(a.t)}</b><span>${esc(a.o)}</span>${a.c?`<div class="code"><span>${esc(a.c)}</span><button data-copy="${esc(a.c)}">Copiar cupom</button></div>`:''}</div>`;
+ $('#adList').innerHTML=ADS.map(adHtml).join('');
+ $('#homeAd').innerHTML=adHtml(ADS[0]);
+ $('#pollList').innerHTML=POLLS.map((p,i)=>{
+  const mv=myVotes[p.id??i],tot=Math.max(1,p.v.reduce((a,b)=>a+b,0));
+  return `<div class="poll"><div class="q">${esc(p.q)}</div>${mv===undefined
+   ?p.o.map((o,j)=>`<button class="opt" data-vote="${i}:${j}">${esc(o)}</button>`).join('')
+   :p.o.map((o,j)=>{const n=p.v[j],pc=Math.round(n/tot*100);return `<div class="res${mv===j?' mine':''}"><i style="width:${pc}%"></i><span>${esc(o)}${mv===j?' (seu voto)':''}</span><span class="pc">${pc}%</span></div>`}).join('')+`<span class="small">${tot} votos</span>`}</div>`}).join('');
+ const ct=byId(queue[qi]);$('#oncastLogo').classList.toggle('live',!!ct&&ct.kind==='pod'&&!au.paused);
+ const e0=EVENTS[0],ep=eps[0],p0=POLLS[0];
+ $('#homeEp').innerHTML=`<div class="k">Novo no Oncast</div><div class="big">${esc(ep.title)}</div><div class="small">${ep.plat} · ${ep.len}</div>`;
+ $('#homeEv').innerHTML=`<div class="k">Próximo evento</div><div class="big">${e0.d} ${e0.m} — ${esc(e0.t)}</div><div class="small">${e0.h} · ${esc(e0.p)}</div>`;
+ $('#homePoll').innerHTML=`<div class="k">Enquete da semana</div><div class="big">${esc(p0.q)}</div><div class="small">${myVotes[p0.id??0]===undefined?'Toque para votar':'Você já votou. Veja o resultado'}</div>`;
+ const mus=[['minhas','Minhas'],['radios','Rádios'],['artistas','Artistas'],['biblio','Biblioteca']];
+ document.querySelectorAll('.view .subnav:not(#comNav)').forEach(s=>{const cur=s.closest('.view').id.slice(2);s.innerHTML=mus.map(([v,l])=>`<button class="chip${v===cur?' on':''}" data-v="${v}">${l}</button>`).join('')});
+ $('#comNav').innerHTML='<button class="chip" data-jump="c-enquetes">Enquetes</button><button class="chip" data-jump="c-promo">Promoções</button>';
+}
+let rTimer;$('#radioQ').addEventListener('input',()=>{clearTimeout(rTimer);rTimer=setTimeout(loadRadios,450)});
+async function loadRadios(){
+ radioState='loading';renderAll();
+ const q=$('#radioQ').value.trim(),tag=rGen==='Todas'?'':rGen.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const qs=new URLSearchParams({countrycode:'BR',hidebroken:'true',order:'clickcount',reverse:'true',limit:'80'});
+ if(q)qs.set('name',q);if(tag)qs.set('tag',tag==='noticias'?'news':tag);
+ for(const h of ['de1','nl1','at1']){try{
+  const r=await fetch(`https://${h}.api.radio-browser.info/json/stations/search?${qs}`);if(!r.ok)throw 0;
+  const js=await r.json();const keep=T.filter(t=>t.kind!=='radio'||queue[qi]===t.id);T.splice(0,T.length,...keep);
+  RADIOS=js.filter(x=>(x.url_resolved||'').startsWith('https://')).slice(0,50).map(x=>{const id='r'+x.stationuuid;if(!byId(id))add({id,title:x.name.trim(),artist:[x.state,(x.tags||'').split(',').slice(0,2).join(', ')].filter(Boolean).join(' · ')||'Rádio ao vivo',kind:'radio',src:x.url_resolved,h:x.name.length});return id});
+  radioState='ok';renderAll();return}catch(e){}}
+ radioState='error';renderAll();
+}
+
+/* ---- modal / toast ---- */
+let tt;const toast=m=>{const e=$('#toast');e.textContent=m;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),2600)};
+const open=h=>{$('#sheet').innerHTML=h;$('#modal').classList.add('on')};
+const close=()=>$('#modal').classList.remove('on');
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')close()});
+function more(id){
+ const t=byId(id);
+ open(`<b style="font-size:18px">${esc(t.title)}</b><span class="small">${esc(t.artist)}</span>
+ <span class="small" style="margin-top:6px">Adicionar à playlist</span>
+ ${pls.map((p,i)=>`<button class="btn ghost" data-addpl="${i}" data-id="${id}">${esc(p.name)}</button>`).join('')||'<span class="small">Crie uma playlist na Biblioteca.</span>'}
+ ${t.kind==='artista'?`<button class="btn ghost" data-report="${id}" style="border-color:var(--warn);color:var(--warn)">Denunciar conteúdo</button>`:''}
+ <button class="btn" data-close>Fechar</button>`);
+}
+function report(id){
+ const t=byId(id);
+ open(`<b style="font-size:18px">Denunciar “${esc(t.title)}”</b><span class="small">A denúncia vai para análise do administrador, que pode ocultar a faixa.</span>
+ ${['Viola direitos autorais (música de outra pessoa)','Conteúdo ofensivo ou ilegal','Spam ou propaganda','Outro motivo'].map((m,i)=>`<label class="chk"><input type="radio" name="mot" value="${i}" ${i?'':'checked'}><span>${m}</span></label>`).join('')}
+ <button class="btn" data-sendrep="${id}">Enviar denúncia</button><button class="btn ghost" data-close>Cancelar</button>`);
+}
+
+/* ---- eventos ---- */
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.v){const mg=['minhas','radios','artistas','biblio'].includes(d.v);document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===d.v||(mg&&x.dataset.grp==='musica')));document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+d.v));scrollTo(0,0)}
+ else if(d.play){const ids=d.q.split(',');playList(ids,ids.indexOf(d.play))}
+ else if(d.fav){favs.has(d.fav)?favs.delete(d.fav):favs.add(d.fav);saveFav();renderAll();toast(favs.has(d.fav)?'Salva nas favoritas':'Removida das favoritas')}
+ else if(d.more)more(d.more);
+ else if(d.addpl){const p=pls[+d.addpl];if(!p.ids.includes(d.id))p.ids.push(d.id);close();renderAll();toast('Adicionada a “'+p.name+'”')}
+ else if(d.report)report(d.report);
+ else if(d.sendrep!==undefined){const t=byId(d.sendrep),m=document.querySelector('input[name=mot]:checked');if(sb&&t&&t.dbid)sb.from('denuncias').insert({faixa_id:t.dbid,motivo:m?m.nextElementSibling.textContent:''}).then(()=>{});close();toast('Denúncia enviada para análise')}
+ else if(d.close!==undefined)close();
+ else if(d.gen){rGen=d.gen;loadRadios()}
+ else if(d.plat){podPlat=d.plat;renderAll()}
+ else if(d.cat){evCat=d.cat;renderAll()}
+ else if(d.rem){const i=+d.rem;rem.has(i)?rem.delete(i):rem.add(i);store('onm-rem',[...rem]);renderAll();toast(rem.has(i)?'Você será avisado na véspera':'Lembrete removido')}
+ else if(d.copy){(navigator.clipboard?navigator.clipboard.writeText(d.copy):Promise.reject()).then(()=>toast('Cupom '+d.copy+' copiado'),()=>toast('Cupom: '+d.copy))}
+ else if(d.vote){const[i,j]=d.vote.split(':').map(Number);const p=POLLS[i];myVotes[p.id??i]=j;p.v[j]++;if(sb&&p.id)sb.from('enquete_votos').insert({enquete_id:p.id,opcao:j}).then(()=>{});store('onm-votes',myVotes);renderAll();toast('Voto registrado')}
+ else if(d.jump){document.getElementById(d.jump).scrollIntoView({behavior:'smooth'})}
+});
+document.addEventListener('toggle',e=>{const i=e.target.dataset&&e.target.dataset.pl;if(i!==undefined&&pls[i])pls[i].open=e.target.open},true);
+$('#plAdd').onclick=()=>{const n=$('#plName').value.trim();if(!n)return toast('Dê um nome à playlist');pls.push({name:n,ids:[],open:true});$('#plName').value='';renderAll()};
+$('#localIn').addEventListener('change',e=>{
+ const fs=[...e.target.files];
+ fs.forEach(f=>add({title:f.name.replace(/\.[^.]+$/,''),artist:'No seu aparelho',kind:'local',src:URL.createObjectURL(f)}));
+ renderAll();if(fs.length)toast(fs.length+' música'+(fs.length>1?'s':'')+' adicionada'+(fs.length>1?'s':''));e.target.value='';
+});
+$('#openUp').onclick=()=>{$('#upForm').hidden=false;$('#openUp').hidden=true};
+$('#cancelUp').onclick=()=>{$('#upForm').hidden=true;$('#openUp').hidden=false};
+$('#upForm').addEventListener('submit',async e=>{
+ e.preventDefault();const f=$('#fFile').files[0];if(!f)return toast('Escolha o arquivo de áudio');
+ if(f.size>15*1024*1024)return toast('O arquivo passa de 15 MB');
+ const rec={titulo:$('#fTit').value.trim(),artista:$('#fArt').value.trim(),email:$('#fMail').value.trim(),genero:$('#fGen').value};
+ const btn=e.target.querySelector('[type=submit]');btn.disabled=true;btn.textContent='Enviando…';
+ try{
+  let src=URL.createObjectURL(f),dbid=null;
+  if(sb){const path=Date.now()+'-'+f.name.replace(/[^\w.-]/g,'_');
+   const up=await sb.storage.from('musicas').upload(path,f,{contentType:f.type||'audio/mpeg'});if(up.error)throw up.error;
+   const url=sb.storage.from('musicas').getPublicUrl(path).data.publicUrl;
+   const ins=await sb.from('faixas').insert({...rec,audio_url:url,declaracao_direitos:true,aceite_termos:true}).select('id').single();if(ins.error)throw ins.error;
+   src=url;dbid=ins.data.id}
+  add({title:rec.titulo,artist:rec.artista,genre:rec.genero,kind:'artista',src,dbid});
+  e.target.reset();$('#upForm').hidden=true;$('#openUp').hidden=false;renderAll();toast('Música publicada nos Artistas locais');
+ }catch(err){toast('Não foi possível enviar. Tente novamente')}
+ btn.disabled=false;btn.textContent='Publicar';
+});
+$('#adForm').addEventListener('submit',e=>{e.preventDefault();if(sb)sb.from('pedidos_anuncio').insert({empresa:$('#aEmp').value,responsavel:$('#aResp').value,contato:$('#aCont').value,tipo:$('#aTipo').value}).then(()=>{});e.target.reset();toast('Pedido enviado. A equipe Garça On entra em contato')});
+$('#evSug').onclick=()=>open(`<b style="font-size:18px">Sugerir um evento</b><label>Nome do evento<input type="text" id="sgT"></label><label>Data e local<input type="text" id="sgD"></label><button class="btn" data-sendsug>Enviar para aprovação</button><button class="btn ghost" data-close>Cancelar</button>`);
+document.addEventListener('click',e=>{if(e.target.closest('[data-sendsug]')){if(sb)sb.from('sugestoes_evento').insert({titulo:($('#sgT')||{}).value||'',data_local:($('#sgD')||{}).value||''}).then(()=>{});close();toast('Sugestão enviada para aprovação')}});
+on('play',renderMore);on('pause',renderMore);
+/* ---- efeitos: visualizador, ondas, ripple, inclinação ---- */
+const cv=$('#viz'),cx=cv.getContext('2d');let actx,an,fd,started=false;
+function initAudio(){if(started)return;started=true;try{actx=new(window.AudioContext||window.webkitAudioContext)();const sr=actx.createMediaElementSource(au1);an=actx.createAnalyser();an.fftSize=128;fd=new Uint8Array(an.frequencyBinCount);sr.connect(an);an.connect(actx.destination)}catch(e){an=null}}
+on('play',()=>{initAudio();if(actx&&actx.state==='suspended')actx.resume();document.body.classList.add('playing')});
+on('pause',()=>document.body.classList.remove('playing'));
+on('timeupdate',()=>{if(au.duration)$('#player').style.setProperty('--pg',au.currentTime/au.duration*100+'%')});
+const still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function drawViz(t){
+ const W=cv.clientWidth,H=cv.clientHeight,d=devicePixelRatio||1;
+ if(cv.width!==W*d||cv.height!==H*d){cv.width=W*d;cv.height=H*d}
+ cx.setTransform(d,0,0,d,0,0);cx.clearRect(0,0,W,H);
+ const n=40,bw=W/n,g=cx.createLinearGradient(0,H,0,0);g.addColorStop(0,'rgba(51,214,239,.6)');g.addColorStop(1,'rgba(166,244,255,0)');cx.fillStyle=g;
+ const live=an&&!au1.paused&&au===au1;if(live)an.getByteFrequencyData(fd);const fake=!au.paused&&au===au2;
+ for(let k=0;k<n;k++){const m=Math.abs(k-n/2)/(n/2),idx=Math.floor(m*(fd?fd.length*.7:1));
+  const v=live?fd[idx]/255:fake?.35+.3*Math.abs(Math.sin(t/160+k*1.7))*Math.abs(Math.cos(t/410+k*.6)):.12+.08*Math.sin(t/700+k*.5);const h=Math.max(4,v*H*(1-m*.35));
+  cx.beginPath();cx.roundRect?cx.roundRect(k*bw+2,H-h,bw-4,h,4):cx.rect(k*bw+2,H-h,bw-4,h);cx.fill()}
+ if(!still)requestAnimationFrame(drawViz)}
+requestAnimationFrame(drawViz);
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('.btn,.chip,.tile,.opt,.pp,.card');if(!b||still)return;
+ const r=b.getBoundingClientRect(),z=Math.max(r.width,r.height)/2,s=document.createElement('span');s.className='rip';
+ s.style.cssText=`width:${z}px;height:${z}px;left:${e.clientX-r.left-z/2}px;top:${e.clientY-r.top-z/2}px`;
+ if(getComputedStyle(b).position==='static')b.style.position='relative';b.style.overflow='hidden';b.appendChild(s);setTimeout(()=>s.remove(),600)});
+document.addEventListener('pointermove',e=>{if(still||e.pointerType!=='mouse')return;const c=e.target.closest('.ad,.tile');document.querySelectorAll('.ad,.tile').forEach(x=>{if(x!==c)x.style.transform=''});
+ if(!c)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(700px) rotateY(${x*6}deg) rotateX(${-y*6}deg)`});
+const MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+async function boot(){
+ sync();renderAll();
+ if(CFG.JAMENDO_CLIENT_ID){try{
+  const r=await fetch(`https://api.jamendo.com/v3.0/tracks/?client_id=${encodeURIComponent(CFG.JAMENDO_CLIENT_ID)}&format=json&limit=24&order=popularity_week&audioformat=mp32`);
+  const js=await r.json();if(js.results&&js.results.length){const keep=T.filter(t=>t.kind!=='livre');T.splice(0,T.length,...keep);
+   js.results.forEach(x=>add({id:'j'+x.id,title:x.name,artist:x.artist_name,kind:'livre',src:x.audio}));
+   $('#homeNote').textContent='Catálogo livre: músicas Creative Commons do Jamendo, com crédito aos artistas.'}}catch(e){}}
+ if(sb){
+  const g=async(tb,q)=>{const r=await q(sb.from(tb).select('*'));if(r.error)throw r.error;return r.data};
+  try{const fx=await g('faixas',q=>q.eq('status','publicada').order('created_at',{ascending:false}).limit(200));
+   const keep=T.filter(t=>t.kind!=='artista');T.splice(0,T.length,...keep);fx.forEach(x=>add({id:'a'+x.id,dbid:x.id,title:x.titulo,artist:x.artista,genre:x.genero,kind:'artista',src:x.audio_url}))}catch(e){}
+  try{const ep=await g('episodios',q=>q.eq('ativo',true).order('data',{ascending:false}).limit(60));
+   if(ep.length){const keep=T.filter(t=>t.kind!=='pod');T.splice(0,T.length,...keep);ep.forEach(x=>{const d=new Date(x.data+'T12:00:00');add({id:'p'+x.id,title:x.titulo,artist:'Oncast · Garça On',kind:'pod',plat:x.plataforma||'Instagram',date:d.getDate()+' '+MES[d.getMonth()],len:x.duracao||'',src:x.audio_url,link:x.link})});$('#podNote').textContent=''}}catch(e){}
+  try{const ev=await g('eventos',q=>q.gte('data',new Date().toISOString().slice(0,10)).order('data'));
+   if(ev.length){EVENTS=ev.map(x=>{const d=new Date(x.data+'T12:00:00');return{d:d.getDate(),m:MES[d.getMonth()],h:x.hora||'',t:x.titulo,p:x.local||'',c:x.categoria||'Outros'}});$('#evNote').textContent=''}}catch(e){}
+  try{const ad=await g('anuncios',q=>q.eq('ativo',true).order('ordem'));
+   if(ad.length){ADS=ad.map(x=>({k:x.tipo||'Destaque',t:x.empresa,o:x.oferta||'',c:x.cupom||'',bg:x.cor||'#33d6ef'}));$('#adNote').textContent=''}}catch(e){}
+  try{const pl=await g('enquetes',q=>q.eq('ativa',true).order('created_at',{ascending:false}));
+   if(pl.length){const vs=await g('enquete_votos',q=>q.in('enquete_id',pl.map(p=>p.id)).limit(100000));
+    myVotes={};POLLS=pl.map(p=>({id:p.id,q:p.pergunta,o:p.opcoes,v:p.opcoes.map((_,j)=>vs.filter(v=>v.enquete_id===p.id&&v.opcao===j).length)}));
+    try{myVotes=JSON.parse(localStorage.getItem('onm-votes')||'{}')}catch(e){}}}catch(e){}
+  renderAll();
+ }
+ loadRadios();
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+boot();
+}
+</script>
+</body>
+</html>
